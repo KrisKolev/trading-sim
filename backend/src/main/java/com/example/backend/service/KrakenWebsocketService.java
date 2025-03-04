@@ -45,7 +45,6 @@ public class KrakenWebsocketService {
         List<String> pairs = List.of(
                 "BTC/USD", "ETH/USD", "XRP/USD", "BCH/USD", "LTC/USD",
                 "ADA/USD", "DOT/USD", "LINK/USD", "DOGE/USD"
-                // Add more if supported
         );
         String pairsJson = new ObjectMapper().valueToTree(pairs).toString();
         String message = "{\"method\":\"subscribe\", \"params\": {\"channel\": \"ticker\", \"symbol\": " + pairsJson + "}}";
@@ -76,6 +75,18 @@ public class KrakenWebsocketService {
         System.out.println("===========================================");
     }
 
+    public Double getLatestPrice(String symbol) {
+        TickerData data = tickerDataMap.get(symbol);
+        if (data != null) {
+            try {
+                return  Double.parseDouble(data.getLastPrice());
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
     // The WebSocket handler updates the tickerDataMap without logging each update.
     private class WebSocketHandler extends TextWebSocketHandler {
         @Override
@@ -89,12 +100,12 @@ public class KrakenWebsocketService {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(message.getPayload());
 
-                // Skip heartbeat messages
+                //Skip heartbeat messages
                 if (root.has("channel") && "heartbeat".equals(root.get("channel").asText())) {
                     return;
                 }
 
-                // Process ticker messages (either snapshot or update)
+                //Process ticker messages (either snapshot or update)
                 if (root.has("channel") && "ticker".equals(root.get("channel").asText())) {
                     String type = root.has("type") ? root.get("type").asText() : "";
                     if ("snapshot".equals(type) || "update".equals(type)) {
@@ -104,11 +115,13 @@ public class KrakenWebsocketService {
                             if (tickerData.has("symbol") && tickerData.has("last")) {
                                 String symbol = tickerData.get("symbol").asText();
                                 String lastPrice = tickerData.get("last").asText();
-                                // Update the shared ticker data map
+                                //Update the shared ticker data map
                                 tickerDataMap.put(symbol, new TickerData(lastPrice));
                             }
                         }
                     }
+                } else {
+                    System.out.println("Received: " + message.getPayload());
                 }
                 // Optionally, you can log or process other message types as needed.
             } catch (Exception e) {
@@ -117,7 +130,7 @@ public class KrakenWebsocketService {
         }
     }
 
-    // Map symbol to full cryptocurrency name
+    //Map symbol to full cryptocurrency name
     private String mapSymbolToName(String symbol) {
         Map<String, String> mapping = Map.ofEntries(
                 Map.entry("BTC/USD", "Bitcoin"),
