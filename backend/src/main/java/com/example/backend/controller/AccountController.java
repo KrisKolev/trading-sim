@@ -1,8 +1,11 @@
 package com.example.backend.controller;
 
 import com.example.backend.model.Account;
+import com.example.backend.model.Transaction;
 import com.example.backend.service.AccountService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/account")
@@ -34,5 +37,10 @@ public class AccountController {
     public String reset() {
         accountService.resetAccount();
         return "Account is reset!";
+    }
+
+    @GetMapping("/history")
+    public List<Transaction> transactionHistory() {
+        return accountService.getTransactionHistory();
     }
 }
