@@ -8,5 +8,5 @@ import lombok.Data;
 public class Crypto {
     private String name;
     private String symbol;
-    private double price;
+    private String price;
 }
